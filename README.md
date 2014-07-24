@@ -1,5 +1,5 @@
-pyremotestream
-==============
+pyremotestreamer
+================
 
 Take an arbitrary URL source and stream it to a client.+
 
