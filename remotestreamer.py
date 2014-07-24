@@ -6,16 +6,28 @@ from pyramid.config import Configurator
 # this is your persistence layer. some keyvalue store with good read/write performance.
 download_table = defaultdict(int)
 
-def display_status(user, block_size):
-    if download_table[user] % (block_size * 2) == 0:
-        print "%s has downloaded %d bytes." % (user, download_table[user])
-
 def update_download_table(user, bytes):
-    download_table[user] += bytes
+    download_table[user.name] += bytes
 
-def has_credit(user):
-    # check if the user has enough credit left to recieve this chunk of data
-    return True
+
+class User(object):
+    def __init__(self, name, credit):
+        self.name = name
+        self.credit = credit # in bytes
+
+    def has_enough_credit(self, block_size):
+        return self.credit >= block_size
+
+    def add_credit(self, credit):
+        self.credit += credit
+
+    def deduct_credit(self, credit):
+        update_download_table(self, credit)
+        self.credit -= credit
+
+    def display_download_stats(self):
+        print "%s has downloaded %d bytes." % (self.name, download_table[self.name])
+
 
 class MeteredFileIter(FileIter):
     def __init__(self, user, file):
@@ -23,28 +35,29 @@ class MeteredFileIter(FileIter):
         super(MeteredFileIter, self).__init__(file)
 
     def next(self):
+        if not self.user.has_enough_credit(self.block_size):
+            print "Not enough credit to coninute download"
+            raise StopIteration
+
         val = self.file.read(self.block_size)
         if not val:
             raise StopIteration
 
-        update_download_table(self.user, self.block_size)
-
-        if not has_credit(self.user):
-            raise StopIteration
-
-        display_status(self.user, self.block_size)
+        self.user.deduct_credit(self.block_size)
+        self.user.display_download_stats()
 
         return val
     __next__ = next
 
 def download(request):
     import requests
-
     url = 'http://www.wswd.net/testdownloadfiles/1GB.zip'
     r = requests.get(url, stream=True)
 
+    user = User('user1', 1000000)
+
     response = Response(content_type="application/octet-stream")
-    response.app_iter = MeteredFileIter('user1', r.raw)
+    response.app_iter = MeteredFileIter(user, r.raw)
     response.content_disposition = 'attachment; filename="1GB.zip"'
     response.content_length = int(r.headers['content-length'])
 
