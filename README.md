@@ -9,7 +9,7 @@ usage
 =====
 See: http://pip.readthedocs.org/en/latest/installing.html
 
-pip install -r requirements.txt
-python remotestreamer.py
+  pip install -r requirements.txt
+  python remotestreamer.py
 
 Then visit http://localhost:6547 in your browser and you should see a download start that appears to be from your machine.
