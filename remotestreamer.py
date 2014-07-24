@@ -3,7 +3,19 @@ from wsgiref.simple_server import make_server
 from pyramid.response import Response, FileIter
 from pyramid.config import Configurator
 
+# this is your persistence layer. some keyvalue store with good read/write performance.
 download_table = defaultdict(int)
+
+def display_status(user, block_size):
+    if download_table[user] % (block_size * 2) == 0:
+        print "%s has downloaded %d bytes." % (user, download_table[user])
+
+def update_download_table(user, bytes):
+    download_table[user] += bytes
+
+def has_credit(user):
+    # check if the user has enough credit left to recieve this chunk of data
+    return True
 
 class MeteredFileIter(FileIter):
     def __init__(self, user, file):
@@ -14,9 +26,14 @@ class MeteredFileIter(FileIter):
         val = self.file.read(self.block_size)
         if not val:
             raise StopIteration
-        download_table[self.user] += self.block_size
-        if download_table[self.user] % (self.block_size * 2) == 0:
-            print "User has downloaded: %d" % (download_table[self.user])
+
+        update_download_table(self.user, self.block_size)
+
+        if not has_credit(self.user):
+            raise StopIteration
+
+        display_status(self.user, self.block_size)
+
         return val
     __next__ = next
 
