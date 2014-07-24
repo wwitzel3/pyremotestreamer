@@ -1,6 +1,8 @@
 pyremotestreamer
 ================
 
+Quick and dirty reference implementation. Not production ready.
+
 Take an arbitrary URL source and stream it to a client. Optionally control the
 amount of bytes the client can receive.
 
