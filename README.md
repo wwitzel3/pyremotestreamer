@@ -7,6 +7,7 @@ http://ipv4.download.thinkbroadband.com/1GB.zip becomes http://localhost/1GB.zip
 
 usage
 =====
+See: http://pip.readthedocs.org/en/latest/installing.html
 
 pip install -r requirements.txt
 python remotestreamer.py
