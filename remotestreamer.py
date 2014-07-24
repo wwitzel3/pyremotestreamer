@@ -59,7 +59,7 @@ def download(request):
     response = Response(content_type="application/octet-stream")
     response.app_iter = MeteredFileIter(user, r.raw)
     response.content_disposition = 'attachment; filename="1GB.zip"'
-    response.content_length = int(r.headers['content-length'])
+    response.content_length = r.headers['content-length']
 
     return response
 
